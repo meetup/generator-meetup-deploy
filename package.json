@@ -4,10 +4,12 @@
   },
   "files": [
     "generators"
-],
-  "keywords": ["yeoman-generator"],
+  ],
+  "keywords": [
+    "yeoman-generator"
+  ],
   "name": "generator-meetup-deploy",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "generate deployment files for webserver and static asset server",
   "main": "index.js",
   "repository": "git@github.com:meetup/deployment-generator.git",
