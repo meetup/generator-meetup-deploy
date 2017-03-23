@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace  # a grouping of projects in Kubernetes
+metadata:
+  name: <%= name %>

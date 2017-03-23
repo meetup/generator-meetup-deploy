@@ -1,0 +1,18 @@
+# The primary entry point for mup-web is a LoadBalancer service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-svc
+  namespace: <%= name =>
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+  loadBalancerIP: "{{LOAD_BALANCER_IP}}"
+  selector:
+    name: webapp

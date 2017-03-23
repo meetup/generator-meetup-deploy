@@ -1,0 +1,81 @@
+# This deployment spec will create a pod containining 3 containers:
+# 1) ssl proxy (nginx ssl/tls termination proxy)
+# 2) mup-web-app (node.js app)
+# 3) mup-web-asset (nginx file server)
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp
+  namespace: <%= name %>
+  annotations:
+      kubernetes.io/change-cause: "{{ANNOTATION_CHANGE_CAUSE}}"
+spec:
+  replicas: <%= replica_count %>
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        name: mup-web
+    spec:
+      containers:
+      - name: ssl-proxy
+        image: nginx:1.11
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: nginx-config
+            mountPath: /etc/nginx/conf.d
+          - name: nginx-certs
+            mountPath: /etc/nginx/certs
+            readOnly: true
+      - name: webapp
+        image: "{{PUBLISH_TAG_APP}}"
+        env:
+        - name: API_HOST
+          value: api.meetup.com
+        - name: ASSET_SERVER_HOST
+          value: beta2.meetup.com
+        - name: OAUTH_AUTH_URL
+          value: https://secure.meetup.com/oauth2/authorize
+        - name: OAUTH_ACCESS_URL
+          value: https://secure.meetup.com/oauth2/access
+        - name: MUPWEB_OAUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secrets
+              key: oauth-key
+        - name: MUPWEB_OAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secrets
+              key: oauth-secret
+        - name: PHOTO_SCALER_SALT
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secrets
+              key: photo-scaler-salt
+        - name: CSRF_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secrets
+              key: csrf-secret
+        - name: COOKIE_ENCRYPT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secrets
+              key: cookie-encrypt-secret
+      - name: webasset
+        image: "{{PUBLISH_TAG_ASSET}}"
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: ssl-proxy-config
+        - name: nginx-certs
+          secret:
+            secretName: ssl-proxy-certs
